@@ -8,6 +8,8 @@ from fastapi import Depends
 from core.auth.deps import get_current_user
 from core.db.session import init_db
 from api.users import router as users_router
+from core.db.session import get_db
+from sqlalchemy.orm import Session
 
 app = FastAPI(title="naviracloud v1")
 
@@ -27,11 +29,12 @@ file_manager = FileManager(settings.CLOUD_STORAGE_DIR)
 
 # ----- Upload File -----
 @app.post("/files")
-async def upload_file(file: UploadFile = File(...), folder: str = "", current_user=Depends(get_current_user)):
+async def upload_file(file: UploadFile = File(...), folder: str = "", 
+                      current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     temp_path = f"/tmp/{file.filename}"
     with open(temp_path, "wb") as f:
         f.write(await file.read())
-    dest = file_manager.save_file(str(current_user.id), folder, file.filename, temp_path)
+    dest = file_manager.save_file(db, str(current_user.id), folder, file.filename, temp_path)
     os.remove(temp_path)
     return {"message": "File uploaded", "path": str(dest)}
 

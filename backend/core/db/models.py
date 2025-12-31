@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, BigInteger
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
+from sqlalchemy import UniqueConstraint
 
 Base = declarative_base()
 
@@ -25,3 +26,7 @@ class File(Base):
     uploaded_at = Column(DateTime, default=datetime.utcnow)
 
     owner = relationship("User", back_populates="files")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "filename", "folder", "version", name="unique_file_per_user_version"),
+    )

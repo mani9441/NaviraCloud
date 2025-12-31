@@ -2,6 +2,9 @@ import os
 import shutil
 from pathlib import Path
 from typing import List
+from sqlalchemy.orm import Session
+from core.db.models import File
+
 
 class FileManager:
     def __init__(self, storage_root: str):
@@ -20,17 +23,32 @@ class FileManager:
             return []
         return sorted(file_dir.iterdir())  # sorted by version
 
-    def save_file(self, user_id: str, folder: str, filename: str, source_path: str) -> Path:
+    def save_file(self, db: Session, user_id: str, folder: str, filename: str, source_path: str) -> Path:
         user_folder = self.get_user_folder(user_id, folder)
         file_dir = user_folder / filename
         file_dir.mkdir(exist_ok=True)
-        # Determine next version
+        
         existing_versions = [f for f in file_dir.iterdir() if f.is_file()]
-        next_version = f"v{len(existing_versions)+1}"
-        dest_path = file_dir / f"{next_version}_{filename}"
+        next_version = len(existing_versions) + 1
+        dest_path = file_dir / f"v{next_version}_{filename}"
         shutil.copy2(source_path, dest_path)
-        return dest_path
 
+        # Insert metadata into DB
+        size = os.path.getsize(dest_path)
+        db_file = File(
+            user_id=int(user_id),
+            filename=filename,
+            folder=folder,
+            version=next_version,
+            size=size
+        )
+        db.add(db_file)
+        db.commit()
+        db.refresh(db_file)
+
+        return dest_path
+    
+    
     def list_files(self, user_id: str, folder: str = "") -> List[str]:
         user_folder = self.get_user_folder(user_id, folder)
         if not user_folder.exists():
