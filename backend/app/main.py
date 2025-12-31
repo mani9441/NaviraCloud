@@ -9,7 +9,7 @@ from core.auth.deps import get_current_user
 from core.db.session import init_db
 from api.users import router as users_router
 
-app = FastAPI(title="MyCloudHub v1")
+app = FastAPI(title="naviracloud v1")
 
 app.include_router(users_router)
 
