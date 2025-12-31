@@ -6,6 +6,8 @@ load_dotenv("config/.env")
 class Settings:
     ENV = os.getenv("ENV", "development")
 
+    DATABASE_URL = os.getenv("DATABASE_URL")
+
     CLOUD_ROOT = os.getenv("CLOUD_ROOT")
     CLOUD_STORAGE_DIR = os.getenv("CLOUD_STORAGE_DIR")
     CLOUD_LOG_DIR = os.getenv("CLOUD_LOG_DIR")
